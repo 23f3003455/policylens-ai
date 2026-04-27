@@ -36,19 +36,15 @@ LANGUAGE_INSTRUCTIONS = {
 def extract_json(text):
     """Robustly extract a JSON object from AI response text."""
     text = text.strip()
-
-    # Remove markdown code fences (```json ... ``` or ``` ... ```)
     text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\s*```$', '', text)
     text = text.strip()
 
-    # Try direct parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # Find the outermost { ... } block in case AI added surrounding text
     match = re.search(r'\{[\s\S]*\}', text)
     if match:
         try:
@@ -67,16 +63,11 @@ def fetch_web_context(policy):
             max_results=6
         )
         if not results:
-            return None, []
-
-        context_lines = []
-        for r in results:
-            context_lines.append(f"- {r['title']}: {r['body']}")
-
-        return "\n".join(context_lines), results
+            return None
+        return "\n".join(f"- {r['title']}: {r['body']}" for r in results)
     except Exception as e:
         print(f"Search error: {e}")
-        return None, []
+        return None
 
 
 @app.route('/')
@@ -91,56 +82,42 @@ def explain():
     user_type = data.get('userType', 'general')
     language = data.get('language', 'hinglish')
 
-    if not policy:
-        return jsonify({'error': 'Policy name is required'}), 400
+    if not policy or len(policy) < 3:
+        return jsonify({'error': 'Please enter a valid policy name.'}), 400
 
     user_label = USER_TYPE_LABELS.get(user_type, 'General Citizen')
     lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS['hinglish'])
 
-    # Step 1: Fetch real-time web context
-    web_context, raw_results = fetch_web_context(policy)
+    web_context = fetch_web_context(policy)
 
     if web_context:
-        context_block = f"""
-REAL-TIME WEB SEARCH RESULTS for "{policy}":
+        context_block = f"""REAL-TIME WEB SEARCH RESULTS for "{policy}":
 {web_context}
 
-Use the above search results as your primary source of truth. Base your answer on this current information.
-"""
+Use these search results as your primary source. Base your answer on this current information."""
     else:
-        context_block = f"""
-No web search results were found for "{policy}".
-If this policy clearly does not exist or is not a real government policy, set "invalid" to true.
-Otherwise, use your training knowledge carefully.
-"""
+        context_block = f"""No web search results found for "{policy}". Use your training knowledge to answer as accurately as possible."""
 
-    prompt = f"""You are an expert on government policies, especially Indian government policies.
+    prompt = f"""You are an expert on Indian and global government policies.
 
 {context_block}
 
-Now explain the policy "{policy}" for a {user_label} in {lang_instruction}
+Explain the policy "{policy}" for a {user_label} in {lang_instruction}
 
-VALIDATION RULES (be very generous — only reject obvious nonsense):
-- Mark "invalid" ONLY if the input is complete gibberish like "asdfjkl policy" or "xyz 9999 bill" with zero connection to any real policy or topic.
-- Real bills, acts, schemes, budgets, reservations, amendments — even if search results are limited — should ALWAYS be answered using your training knowledge.
-- If the policy is a future proposal, explain what is known or proposed about it. Do NOT reject it.
-- When in doubt, ANSWER. Never reject a real-sounding policy name.
-
-If valid, return ONLY this JSON (no markdown, no extra text):
+Return ONLY this JSON object (no markdown, no extra text outside the JSON):
 {{
-  "invalid": false,
-  "simple_explanation": "3-4 sentences explaining what this policy is based on current information.",
-  "why_introduced": "2-3 sentences about why the government introduced or proposed this policy.",
-  "personal_impact": "3-4 sentences on how this policy specifically affects a {user_label}. Be concrete.",
+  "simple_explanation": "3-4 sentences explaining what this policy is.",
+  "why_introduced": "2-3 sentences about why this policy was introduced.",
+  "personal_impact": "3-4 sentences on how this specifically affects a {user_label}. Be concrete.",
   "pros": ["benefit 1", "benefit 2", "benefit 3"],
   "cons": ["drawback 1", "drawback 2", "drawback 3"],
   "summary": "Exactly 2 lines. Key takeaway for a {user_label}."
 }}
 
-CRITICAL RULES:
-- Keep all JSON keys in English exactly as shown above (e.g., "simple_explanation", "pros", "cons")
-- Write only the VALUES in {lang_instruction.split('—')[0].strip()}
-- Return raw JSON only — no extra sentences, no markdown, no explanation outside the JSON"""
+RULES:
+- Keep JSON keys exactly as shown in English
+- Write all VALUES in {lang_instruction.split('—')[0].strip()}
+- Return raw JSON only, no text before or after"""
 
     try:
         response = client.chat.completions.create(
@@ -149,7 +126,7 @@ CRITICAL RULES:
             messages=[
                 {
                     'role': 'system',
-                    'content': 'You explain government policies using real web search data. Always respond with valid JSON only. No markdown, no extra text.'
+                    'content': 'You are a policy expert. Always respond with a valid JSON object only. No markdown, no extra text.'
                 },
                 {
                     'role': 'user',
@@ -159,20 +136,15 @@ CRITICAL RULES:
         )
 
         text = response.choices[0].message.content.strip()
-        print(f"[AI RAW RESPONSE]:\n{text}\n")  # debug log
+        print(f"[AI RESPONSE]:\n{text}\n")
 
         parsed = extract_json(text)
 
         if parsed is None:
             return jsonify({'error': 'Could not parse AI response. Please try again.'}), 500
 
-        if parsed.get('invalid'):
-            return jsonify({'error': parsed.get('reason', 'This policy does not exist or could not be found.')}), 422
-
         return jsonify({'result': parsed})
 
-    except json.JSONDecodeError:
-        return jsonify({'error': 'Could not parse AI response. Please try again.'}), 500
     except Exception as e:
         print(f'Error: {e}')
         return jsonify({'error': str(e)}), 500
