@@ -63,8 +63,8 @@ def fetch_web_context(policy):
     """Search DuckDuckGo and return top results as a context string."""
     try:
         results = DDGS().text(
-            f"{policy} India government policy",
-            max_results=5
+            f"{policy} India government bill act scheme",
+            max_results=6
         )
         if not results:
             return None, []
@@ -120,10 +120,11 @@ Otherwise, use your training knowledge carefully.
 
 Now explain the policy "{policy}" for a {user_label} in {lang_instruction}
 
-VALIDATION RULES:
-- If the search results show NO relevant information AND the policy name is clearly fake or nonsensical, return: {{"invalid": true, "reason": "This policy does not exist."}}
-- If the policy is a future proposal not yet officially announced or passed, clearly mention that in your explanation but still explain what is known about it.
-- Otherwise, proceed with the full explanation using current information from search results.
+VALIDATION RULES (be very generous — only reject obvious nonsense):
+- Mark "invalid" ONLY if the input is complete gibberish like "asdfjkl policy" or "xyz 9999 bill" with zero connection to any real policy or topic.
+- Real bills, acts, schemes, budgets, reservations, amendments — even if search results are limited — should ALWAYS be answered using your training knowledge.
+- If the policy is a future proposal, explain what is known or proposed about it. Do NOT reject it.
+- When in doubt, ANSWER. Never reject a real-sounding policy name.
 
 If valid, return ONLY this JSON (no markdown, no extra text):
 {{
@@ -179,5 +180,5 @@ CRITICAL RULES:
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
-    print(f'\n🔍 PolicyLens AI running at http://localhost:{port}\n')
+    print(f'\nPolicyLens AI running at http://localhost:{port}\n')
     app.run(port=port, debug=True)
