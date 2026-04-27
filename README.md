@@ -1,6 +1,5 @@
-# policylens-ai
+# PolicyLens AI 
 
-# PolicyLens AI  
 **"Understand Any Govt Policy - In Your Language"**  
 Understanding Government Policies in Your Language  
 
