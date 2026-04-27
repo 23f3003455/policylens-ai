@@ -47,13 +47,20 @@ def explain():
     user_label = USER_TYPE_LABELS.get(user_type, 'General Citizen')
     lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS['hinglish'])
 
-    prompt = f"""You are an expert on Indian government policies. Explain the following policy in {lang_instruction}
+    prompt = f"""You are an expert on Indian government policies. Today's date is April 2026.
+
+FIRST — validate the policy:
+- If the policy name is fictional, nonsensical, or clearly does not exist, return: {{"invalid": true, "reason": "This policy does not exist."}}
+- If the policy is a FUTURE policy that has NOT been announced or introduced yet as of April 2026 (e.g., Budget 2030, Policy 2050), return: {{"invalid": true, "reason": "This policy has not been introduced yet. Please ask about an existing policy."}}
+- Only proceed if the policy is real and has already been introduced.
 
 Policy to explain: "{policy}"
 Target user: {user_label}
+Language: {lang_instruction}
 
-Return ONLY a valid JSON object with exactly these keys (no markdown, no extra text):
+If the policy IS valid and real, return ONLY this JSON (no markdown, no extra text):
 {{
+  "invalid": false,
   "simple_explanation": "3-4 sentences explaining what this policy is. Use simple everyday language.",
   "why_introduced": "2-3 sentences about why the government introduced this policy.",
   "personal_impact": "3-4 sentences explaining specifically how this policy affects a {user_label}. Be concrete and relatable.",
@@ -62,7 +69,7 @@ Return ONLY a valid JSON object with exactly these keys (no markdown, no extra t
   "summary": "Exactly 2 lines. Key takeaway for a {user_label}."
 }}
 
-IMPORTANT: Write ALL values in the JSON in {lang_instruction.split('—')[0].strip()}. Do not use English unless the language is Hinglish."""
+IMPORTANT: Write all explanation values in {lang_instruction.split('—')[0].strip()}. Do not fabricate or guess details about policies you are unsure about."""
 
     try:
         response = client.chat.completions.create(
@@ -88,6 +95,10 @@ IMPORTANT: Write ALL values in the JSON in {lang_instruction.split('—')[0].str
             text = parts[1].lstrip('json').strip() if len(parts) > 1 else text
 
         parsed = json.loads(text)
+
+        if parsed.get('invalid'):
+            return jsonify({'error': parsed.get('reason', 'This policy does not exist or has not been introduced yet.')}), 422
+
         return jsonify({'result': parsed})
 
     except json.JSONDecodeError:
