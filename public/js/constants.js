@@ -6,7 +6,7 @@ const USER_TYPES = [
 ];
 
 const LANGUAGES = [
-  { value: 'hinglish',  label: '🇮🇳 Hinglish (Hindi + English)' },
+  { value: 'hinglish',  label: '🇮🇳 Hinglish' },
   { value: 'hindi',     label: '🔵 Hindi — हिंदी' },
   { value: 'bengali',   label: '🟠 Bengali — বাংলা' },
   { value: 'telugu',    label: '🟡 Telugu — తెలుగు' },

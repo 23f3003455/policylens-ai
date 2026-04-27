@@ -134,7 +134,7 @@ function App() {
   return (
     <>
       <div className="header">
-        <div className="ai-badge">Made for Bharat 🇮🇳</div>
+        <div className="ai-badge">Made for INDIA 🇮🇳</div>
         <h1>Policy<span className="gradient">Lens</span> AI</h1>
         <p className="tagline">Understand any government policy — in your language</p>
         <div className="tricolor-stripe">
@@ -161,7 +161,7 @@ function App() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Who are you?</label>
+                <label>Your Role</label>
                 <div className="select-wrapper">
                   <select
                     value={userType}
@@ -218,7 +218,7 @@ function App() {
       </div>
 
       <div className="footer">
-        PolicyLens AI &nbsp;·&nbsp; Powered by AI &nbsp;·&nbsp; Made with ♥ for Bharat 🇮🇳
+        PolicyLens-AI &nbsp;·&nbsp; Powered by Claude AI &nbsp;·&nbsp; Made with ♥ for INDIA 🇮🇳
       </div>
     </>
   );
