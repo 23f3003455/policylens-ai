@@ -1,118 +1,96 @@
-# PolicyLens AI 
+# PolicyLens AI
 
-**"Understand Any Govt Policy - In Your Language"**  
-Understanding Government Policies in Your Language  
+Understand government policies in simple, personalized language.
 
-> Powered by AI | Built for India 🇮🇳  
+PolicyLens AI is a Python/Flask web app that helps users understand Indian and global government policies. Users enter a policy name, choose their role and preferred language, and receive a structured AI-generated explanation.
 
----
+## Features
 
-## 🚨 Problem  
+- Policy explanations tailored by user type
+- Multiple Indian language options
+- Structured output:
+  - Simple explanation
+  - Why it was introduced
+  - Personal impact
+  - Pros and cons
+  - Summary
+- Live web context using DuckDuckGo search
+- One-click copy in the frontend
 
-India has **1.4 billion people**, yet most citizens struggle to understand government policies.
+## Tech Stack
 
-- Policies are written in **complex legal English/Hindi**
-- People don’t know **how policies affect them personally**
-- Lack of support for **regional languages**
+| Component | Technology |
+| --- | --- |
+| Frontend | HTML, CSS, React 18 via CDN, plain JavaScript |
+| Backend | Python, Flask |
+| Production Server | Gunicorn |
+| AI Provider | Anthropic Claude API |
+| Web Context | duckduckgo-search |
+| Deployment | Render |
 
-👉 Result: Citizens remain **uninformed about laws that directly impact their lives**
+## Project Structure
 
----
+```text
+.
+├── app.py
+├── api/
+│   ├── ai.py
+│   ├── constants.py
+│   ├── routes.py
+│   ├── search.py
+│   └── utils.py
+├── public/
+│   ├── index.html
+│   ├── css/
+│   └── js/
+├── requirements.txt
+├── Procfile
+└── render.yaml
+```
 
-## 💡 Solution — PolicyLens AI  
+## Local Setup
 
-A simple AI-powered tool to understand policies in your own language.
+1. Create and activate a Python virtual environment.
 
-### 🔍 How it works:
-1. Enter any policy name  
-   *(e.g., GST, Budget 2024, NEP, MGNREGA)*  
-2. Select:
-   - Your role (Student / Job Seeker / Business Owner / Citizen)  
-   - Your preferred language  
-3. Click **"Explain Policy"**  
+```bash
+python -m venv .venv
+```
 
-👉 Get a complete breakdown instantly  
+2. Install dependencies.
 
----
+```bash
+pip install -r requirements.txt
+```
 
-## ✨ Features  
+3. Create a `.env` file with your Anthropic API key.
 
-- 🌐 **11 Regional Languages**  
-  Hinglish, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, dia  
+```bash
+ANTHROPIC_API_KEY=your_api_key_here
+```
 
-- 👤 **Personalized Explanation**  
-  Output adapts based on user type  
+4. Run the app.
 
-- 📋 **Structured Output**
-  - Simple Explanation  
-  - Why Introduced  
-  - Your Impact  
-  - Pros & Cons  
-  - Summary  
+```bash
+python app.py
+```
 
-- ⚡ **Instant Results**  
-- 📋 **One-click Copy**
+The app runs locally at:
 
----
+```text
+http://localhost:3000
+```
 
-## ⚙️ Tech Stack  
+## Deployment
 
-| Component   | Technology |
-|------------|-----------|
-| Frontend   | React.js (single-file, no build step) |
-| Backend    | Python + Flask |
-| AI Model   | Llama 3.3 70B via Groq API |
-| Deployment | Render.com |
-| Language Support | Prompt-based multilingual generation |
+This project is configured for Render as a Python web service.
 
----
+```yaml
+buildCommand: pip install -r requirements.txt
+startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+```
 
-## 🎯 Use Cases  
+Required environment variable:
 
-- 🎓 **Students** — Understand NEP, scholarships  
-- 💼 **Job Seekers** — MGNREGA, Skill India  
-- 🏪 **Business Owners** — GST, tax policies  
-- 🧑 **Citizens** — Budget, healthcare, farming laws  
-
----
-
-## 📈 Impact  
-
-India has **22 official languages**.  
-PolicyLens AI bridges the gap between **government policies and citizens**.
-
----
-
-## 🚀 Future Scope  
-
-- 🔊 Voice-based explanations  
-- 📱 Mobile app (Android/iOS)  
-- 🔔 Policy alerts  
-- 📚 Policy history tracking  
-- 🤝 WhatsApp bot integration  
-- 🗳️ Election manifesto explainer  
-
----
-
-## 🖥️ Demo  
-
-**Example:**  
-- Policy: GST  
-- User: Business Owner  
-- Language: Hinglish  
-
-👉 Outputs a complete structured explanation  
-
----
-
-## 🏁 Conclusion  
-
-> *"Democracy works best when citizens understand the laws governing them."*
-
-PolicyLens AI makes policies **accessible, understandable, and personalized**.
-
-
----
-
-## 🔗 Links  
-- 🌐 Live Demo: https://policylens-ai-ugow.onrender.com/ 
+```text
+ANTHROPIC_API_KEY
+```
