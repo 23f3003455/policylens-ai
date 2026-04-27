@@ -1,5 +1,5 @@
 flask
-groq
+anthropic
 python-dotenv
 gunicorn
 duckduckgo-search

@@ -1,11 +1,16 @@
 import os
-from groq import Groq
+import anthropic
 
 from .constants import USER_TYPE_LABELS, LANGUAGE_INSTRUCTIONS
 from .search import fetch_web_context
 from .utils import extract_json
 
-client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
+client = anthropic.Anthropic(api_key=os.environ.get('ANTHROPIC_API_KEY'))
+
+SYSTEM_PROMPT = (
+    'You are a policy expert. Always respond with a valid JSON object only. '
+    'No markdown, no extra text.'
+)
 
 
 def _build_prompt(policy, user_label, lang_instruction, web_context):
@@ -45,9 +50,9 @@ RULES:
 
 def explain_policy(policy, user_type, language):
     """
-    Fetch web context, call Groq, and return the parsed result dict.
+    Fetch web context, call Claude, and return the parsed result dict.
     Raises ValueError if the AI response cannot be parsed.
-    Raises Exception on Groq API errors.
+    Raises Exception on Anthropic API errors.
     """
     user_label = USER_TYPE_LABELS.get(user_type, 'General Citizen')
     lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS['hinglish'])
@@ -55,22 +60,14 @@ def explain_policy(policy, user_type, language):
     web_context = fetch_web_context(policy)
     prompt = _build_prompt(policy, user_label, lang_instruction, web_context)
 
-    response = client.chat.completions.create(
-        model='llama-3.3-70b-versatile',
+    response = client.messages.create(
+        model='claude-opus-4-7',
         max_tokens=1500,
-        messages=[
-            {
-                'role': 'system',
-                'content': 'You are a policy expert. Always respond with a valid JSON object only. No markdown, no extra text.',
-            },
-            {
-                'role': 'user',
-                'content': prompt,
-            },
-        ],
+        system=SYSTEM_PROMPT,
+        messages=[{'role': 'user', 'content': prompt}],
     )
 
-    text = response.choices[0].message.content.strip()
+    text = response.content[0].text.strip()
     print(f'[AI RESPONSE]:\n{text}\n')
 
     parsed = extract_json(text)
