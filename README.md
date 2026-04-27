@@ -116,7 +116,4 @@ PolicyLens AI makes policies **accessible, understandable, and personalized**.
 ---
 
 ## 🔗 Links  
-https://policylens-ai-ugow.onrender.com/
-
-- 🌐 Live Demo: [Add link]  
-- 💻 GitHub: [Add link]  
+- 🌐 Live Demo: https://policylens-ai-ugow.onrender.com/ 
