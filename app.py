@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='public')
+app = Flask(__name__, static_folder='public', static_url_path='')
 
 from api.routes import api_bp
 app.register_blueprint(api_bp, url_prefix='/api')
