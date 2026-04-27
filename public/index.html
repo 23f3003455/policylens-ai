@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PolicyLens AI — Samjho Apni Policy</title>
+  <title>PolicyLens AI — Makes Policy Understanding Easy</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -440,14 +440,14 @@
         <>
           <div className="header">
             <h1>Policy<span className="gradient">Lens</span> AI</h1>
-            <p className="tagline">Koi bhi sarkari policy samjho — apni bhasha mein 🇮🇳</p>
+            <p className="tagline">Understand Any Govt Policy — In Your Language 🇮🇳</p>
           </div>
 
           <div className="container">
             <div className="card">
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label>Policy ka naam likhein</label>
+                  <label>Write the Policy Name</label>
                   <input
                     type="text"
                     value={policy}
@@ -460,7 +460,7 @@
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Aap kaun hain?</label>
+                    <label>Who are You?</label>
                     <div className="select-wrapper">
                       <select
                         value={userType}
@@ -475,7 +475,7 @@
                   </div>
 
                   <div className="form-group">
-                    <label>Bhasha chunein (Language)</label>
+                    <label>Select Your Language</label>
                     <div className="select-wrapper">
                       <select
                         value={language}
@@ -517,7 +517,7 @@
           </div>
 
           <div className="footer">
-            PolicyLens AI — Powered by Claude AI &nbsp;•&nbsp; Made for India 🇮🇳
+            PolicyLens AI — Powered by AI &nbsp;•&nbsp; Made for India 🇮🇳
           </div>
         </>
       );
