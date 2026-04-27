@@ -3,6 +3,7 @@ import json
 from flask import Flask, request, jsonify, send_from_directory
 from groq import Groq
 from dotenv import load_dotenv
+from duckduckgo_search import DDGS
 
 load_dotenv()
 
@@ -30,9 +31,31 @@ LANGUAGE_INSTRUCTIONS = {
     'odia':      'Odia (ଓଡ଼ିଆ) using Odia script. Write naturally as an Odia speaker would explain it.',
 }
 
+
+def fetch_web_context(policy):
+    """Search DuckDuckGo and return top results as a context string."""
+    try:
+        results = DDGS().text(
+            f"{policy} India government policy",
+            max_results=5
+        )
+        if not results:
+            return None, []
+
+        context_lines = []
+        for r in results:
+            context_lines.append(f"- {r['title']}: {r['body']}")
+
+        return "\n".join(context_lines), results
+    except Exception as e:
+        print(f"Search error: {e}")
+        return None, []
+
+
 @app.route('/')
 def index():
     return send_from_directory('public', 'index.html')
+
 
 @app.route('/api/explain', methods=['POST'])
 def explain():
@@ -47,29 +70,46 @@ def explain():
     user_label = USER_TYPE_LABELS.get(user_type, 'General Citizen')
     lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS['hinglish'])
 
-    prompt = f"""You are an expert on Indian government policies. Today's date is April 2026.
+    # Step 1: Fetch real-time web context
+    web_context, raw_results = fetch_web_context(policy)
 
-FIRST — validate the policy:
-- If the policy name is fictional, nonsensical, or clearly does not exist, return: {{"invalid": true, "reason": "This policy does not exist."}}
-- If the policy is a FUTURE policy that has NOT been announced or introduced yet as of April 2026 (e.g., Budget 2030, Policy 2050), return: {{"invalid": true, "reason": "This policy has not been introduced yet. Please ask about an existing policy."}}
-- Only proceed if the policy is real and has already been introduced.
+    if web_context:
+        context_block = f"""
+REAL-TIME WEB SEARCH RESULTS for "{policy}":
+{web_context}
 
-Policy to explain: "{policy}"
-Target user: {user_label}
-Language: {lang_instruction}
+Use the above search results as your primary source of truth. Base your answer on this current information.
+"""
+    else:
+        context_block = f"""
+No web search results were found for "{policy}".
+If this policy clearly does not exist or is not a real government policy, set "invalid" to true.
+Otherwise, use your training knowledge carefully.
+"""
 
-If the policy IS valid and real, return ONLY this JSON (no markdown, no extra text):
+    prompt = f"""You are an expert on government policies, especially Indian government policies.
+
+{context_block}
+
+Now explain the policy "{policy}" for a {user_label} in {lang_instruction}
+
+VALIDATION RULES:
+- If the search results show NO relevant information AND the policy name is clearly fake or nonsensical, return: {{"invalid": true, "reason": "This policy does not exist."}}
+- If the policy is a future proposal not yet officially announced or passed, clearly mention that in your explanation but still explain what is known about it.
+- Otherwise, proceed with the full explanation using current information from search results.
+
+If valid, return ONLY this JSON (no markdown, no extra text):
 {{
   "invalid": false,
-  "simple_explanation": "3-4 sentences explaining what this policy is. Use simple everyday language.",
-  "why_introduced": "2-3 sentences about why the government introduced this policy.",
-  "personal_impact": "3-4 sentences explaining specifically how this policy affects a {user_label}. Be concrete and relatable.",
+  "simple_explanation": "3-4 sentences explaining what this policy is based on current information.",
+  "why_introduced": "2-3 sentences about why the government introduced or proposed this policy.",
+  "personal_impact": "3-4 sentences on how this policy specifically affects a {user_label}. Be concrete.",
   "pros": ["benefit 1", "benefit 2", "benefit 3"],
   "cons": ["drawback 1", "drawback 2", "drawback 3"],
   "summary": "Exactly 2 lines. Key takeaway for a {user_label}."
 }}
 
-IMPORTANT: Write all explanation values in {lang_instruction.split('—')[0].strip()}. Do not fabricate or guess details about policies you are unsure about."""
+Write all explanation values in {lang_instruction.split('—')[0].strip()}."""
 
     try:
         response = client.chat.completions.create(
@@ -78,7 +118,7 @@ IMPORTANT: Write all explanation values in {lang_instruction.split('—')[0].str
             messages=[
                 {
                     'role': 'system',
-                    'content': 'You explain Indian government policies in regional Indian languages. Always respond with valid JSON only. No markdown, no extra text.'
+                    'content': 'You explain government policies using real web search data. Always respond with valid JSON only. No markdown, no extra text.'
                 },
                 {
                     'role': 'user',
@@ -97,7 +137,7 @@ IMPORTANT: Write all explanation values in {lang_instruction.split('—')[0].str
         parsed = json.loads(text)
 
         if parsed.get('invalid'):
-            return jsonify({'error': parsed.get('reason', 'This policy does not exist or has not been introduced yet.')}), 422
+            return jsonify({'error': parsed.get('reason', 'This policy does not exist or could not be found.')}), 422
 
         return jsonify({'result': parsed})
 
