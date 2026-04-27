@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from flask import Flask, request, jsonify, send_from_directory
 from groq import Groq
@@ -30,6 +31,32 @@ LANGUAGE_INSTRUCTIONS = {
     'punjabi':   'Punjabi (ਪੰਜਾਬੀ) using Gurmukhi script. Write naturally as a Punjabi speaker would explain it.',
     'odia':      'Odia (ଓଡ଼ିଆ) using Odia script. Write naturally as an Odia speaker would explain it.',
 }
+
+
+def extract_json(text):
+    """Robustly extract a JSON object from AI response text."""
+    text = text.strip()
+
+    # Remove markdown code fences (```json ... ``` or ``` ... ```)
+    text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*```$', '', text)
+    text = text.strip()
+
+    # Try direct parse
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Find the outermost { ... } block in case AI added surrounding text
+    match = re.search(r'\{[\s\S]*\}', text)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+
+    return None
 
 
 def fetch_web_context(policy):
@@ -109,7 +136,10 @@ If valid, return ONLY this JSON (no markdown, no extra text):
   "summary": "Exactly 2 lines. Key takeaway for a {user_label}."
 }}
 
-Write all explanation values in {lang_instruction.split('—')[0].strip()}."""
+CRITICAL RULES:
+- Keep all JSON keys in English exactly as shown above (e.g., "simple_explanation", "pros", "cons")
+- Write only the VALUES in {lang_instruction.split('—')[0].strip()}
+- Return raw JSON only — no extra sentences, no markdown, no explanation outside the JSON"""
 
     try:
         response = client.chat.completions.create(
@@ -128,13 +158,12 @@ Write all explanation values in {lang_instruction.split('—')[0].strip()}."""
         )
 
         text = response.choices[0].message.content.strip()
+        print(f"[AI RAW RESPONSE]:\n{text}\n")  # debug log
 
-        # Strip markdown code fences if present
-        if text.startswith('```'):
-            parts = text.split('```')
-            text = parts[1].lstrip('json').strip() if len(parts) > 1 else text
+        parsed = extract_json(text)
 
-        parsed = json.loads(text)
+        if parsed is None:
+            return jsonify({'error': 'Could not parse AI response. Please try again.'}), 500
 
         if parsed.get('invalid'):
             return jsonify({'error': parsed.get('reason', 'This policy does not exist or could not be found.')}), 422
