@@ -1,4 +1,5 @@
 const { useState } = React;
+const e = React.createElement;
 
 function OutputCard({ result, policyName, languageLabel }) {
   const [copied, setCopied] = useState(false);
@@ -34,64 +35,50 @@ function OutputCard({ result, policyName, languageLabel }) {
     });
   }
 
-  return (
-    <div className="card output-card">
-      <div className="output-header">
-        <div>
-          <div className="output-title">{policyName}</div>
-          <div className="lang-badge">{languageLabel}</div>
-        </div>
-        <button
-          className={`btn-copy${copied ? ' copied' : ''}`}
-          onClick={handleCopy}
-        >
-          {copied ? '✓ Copied' : 'Copy'}
-        </button>
-      </div>
-
-      <div className="section s1">
-        <div className="section-tag">Simple Explanation</div>
-        <div className="section-body">{result.simple_explanation}</div>
-      </div>
-
-      <div className="divider" />
-
-      <div className="section s2">
-        <div className="section-tag">Why It Was Introduced</div>
-        <div className="section-body">{result.why_introduced}</div>
-      </div>
-
-      <div className="divider" />
-
-      <div className="section s3">
-        <div className="section-tag">Impact on You</div>
-        <div className="section-body">{result.personal_impact}</div>
-      </div>
-
-      <div className="divider" />
-
-      <div className="pros-cons-grid">
-        <div className="section s4">
-          <div className="section-tag">Benefits</div>
-          <ul className="bullet-list pros-list">
-            {result.pros.map((p, i) => <li key={i}>{p}</li>)}
-          </ul>
-        </div>
-        <div className="section s5">
-          <div className="section-tag">Drawbacks</div>
-          <ul className="bullet-list cons-list">
-            {result.cons.map((c, i) => <li key={i}>{c}</li>)}
-          </ul>
-        </div>
-      </div>
-
-      <div className="divider" />
-
-      <div className="section s6">
-        <div className="section-tag">Summary</div>
-        <div className="summary-box">{result.summary}</div>
-      </div>
-    </div>
+  return e('div', { className: 'card output-card' },
+    e('div', { className: 'output-header' },
+      e('div', null,
+        e('div', { className: 'output-title' }, policyName),
+        e('div', { className: 'lang-badge' }, languageLabel)
+      ),
+      e('button', { className: `btn-copy${copied ? ' copied' : ''}`, onClick: handleCopy },
+        copied ? '✓ Copied' : 'Copy'
+      )
+    ),
+    e('div', { className: 'section s1' },
+      e('div', { className: 'section-tag' }, 'Simple Explanation'),
+      e('div', { className: 'section-body' }, result.simple_explanation)
+    ),
+    e('div', { className: 'divider' }),
+    e('div', { className: 'section s2' },
+      e('div', { className: 'section-tag' }, 'Why It Was Introduced'),
+      e('div', { className: 'section-body' }, result.why_introduced)
+    ),
+    e('div', { className: 'divider' }),
+    e('div', { className: 'section s3' },
+      e('div', { className: 'section-tag' }, 'Impact on You'),
+      e('div', { className: 'section-body' }, result.personal_impact)
+    ),
+    e('div', { className: 'divider' }),
+    e('div', { className: 'pros-cons-grid' },
+      e('div', { className: 'section s4' },
+        e('div', { className: 'section-tag' }, 'Benefits'),
+        e('ul', { className: 'bullet-list pros-list' },
+          result.pros.map((p, i) => e('li', { key: i }, p))
+        )
+      ),
+      e('div', { className: 'section s5' },
+        e('div', { className: 'section-tag' }, 'Drawbacks'),
+        e('ul', { className: 'bullet-list cons-list' },
+          result.cons.map((c, i) => e('li', { key: i }, c))
+        )
+      )
+    ),
+    e('div', { className: 'divider' }),
+    e('div', { className: 'section s6' },
+      e('div', { className: 'section-tag' }, 'Summary'),
+      e('div', { className: 'summary-box' }, result.summary)
+    )
   );
 }
 
@@ -105,10 +92,9 @@ function App() {
   const [displayPolicy, setDisplayPolicy] = useState('');
   const [displayLang, setDisplayLang]     = useState('');
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(ev) {
+    ev.preventDefault();
     if (!policy.trim()) return;
-
     setLoading(true);
     setResult(null);
     setError('');
@@ -131,97 +117,70 @@ function App() {
     }
   }
 
-  return (
-    <>
-      <div className="header">
-        <div className="ai-badge">Made for INDIA 🇮🇳</div>
-        <h1>Policy<span className="gradient">Lens</span> AI</h1>
-        <p className="tagline">Understand any government policy — in your language</p>
-        <div className="tricolor-stripe">
-          <span className="tc-saffron" />
-          <span className="tc-white" />
-          <span className="tc-green" />
-        </div>
-      </div>
+  return e(React.Fragment, null,
+    e('div', { className: 'header' },
+      e('div', { className: 'ai-badge' }, 'Made for INDIA 🇮🇳'),
+      e('h1', null, 'Policy', e('span', { className: 'gradient' }, 'Lens'), ' AI'),
+      e('p', { className: 'tagline' }, 'Understand any government policy — in your language'),
+      e('div', { className: 'tricolor-stripe' },
+        e('span', { className: 'tc-saffron' }),
+        e('span', { className: 'tc-white' }),
+        e('span', { className: 'tc-green' })
+      )
+    ),
 
-      <div className="container">
-        <div className="card">
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Policy Name</label>
-              <input
-                type="text"
-                value={policy}
-                onChange={e => setPolicy(e.target.value)}
-                placeholder="e.g. GST, Budget 2024, NEP, Farm Bills, MGNREGA…"
-                disabled={loading}
-                autoFocus
-              />
-            </div>
+    e('div', { className: 'container' },
+      e('div', { className: 'card' },
+        e('form', { onSubmit: handleSubmit },
+          e('div', { className: 'form-group' },
+            e('label', null, 'Policy Name'),
+            e('input', {
+              type: 'text',
+              value: policy,
+              onChange: ev => setPolicy(ev.target.value),
+              placeholder: 'e.g. GST, Budget 2024, NEP, Farm Bills, MGNREGA…',
+              disabled: loading,
+              autoFocus: true,
+            })
+          ),
+          e('div', { className: 'form-row' },
+            e('div', { className: 'form-group' },
+              e('label', null, 'Your Role'),
+              e('div', { className: 'select-wrapper' },
+                e('select', { value: userType, onChange: ev => setUserType(ev.target.value), disabled: loading },
+                  USER_TYPES.map(t => e('option', { key: t.value, value: t.value }, t.label))
+                )
+              )
+            ),
+            e('div', { className: 'form-group' },
+              e('label', null, 'Language'),
+              e('div', { className: 'select-wrapper' },
+                e('select', { value: language, onChange: ev => setLanguage(ev.target.value), disabled: loading },
+                  LANGUAGES.map(l => e('option', { key: l.value, value: l.value }, l.label))
+                )
+              )
+            )
+          ),
+          e('button', { type: 'submit', className: 'btn-explain', disabled: loading || !policy.trim() },
+            loading ? '⏳ Analyzing…' : '🔍 Explain Policy'
+          )
+        )
+      ),
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Your Role</label>
-                <div className="select-wrapper">
-                  <select
-                    value={userType}
-                    onChange={e => setUserType(e.target.value)}
-                    disabled={loading}
-                  >
-                    {USER_TYPES.map(t => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+      loading && e('div', { className: 'loading-wrap' },
+        e('div', { className: 'spinner' }),
+        e('div', { className: 'loading-text' }, 'Analyzing policy, please wait… 🙏')
+      ),
 
-              <div className="form-group">
-                <label>Language</label>
-                <div className="select-wrapper">
-                  <select
-                    value={language}
-                    onChange={e => setLanguage(e.target.value)}
-                    disabled={loading}
-                  >
-                    {LANGUAGES.map(l => (
-                      <option key={l.value} value={l.value}>{l.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
+      error && !loading && e('div', { className: 'error-box' }, '⚠️ ' + error),
 
-            <button
-              type="submit"
-              className="btn-explain"
-              disabled={loading || !policy.trim()}
-            >
-              {loading ? '⏳ Analyzing…' : '🔍 Explain Policy'}
-            </button>
-          </form>
-        </div>
+      result && !loading && e(OutputCard, { result, policyName: displayPolicy, languageLabel: displayLang })
+    ),
 
-        {loading && (
-          <div className="loading-wrap">
-            <div className="spinner" />
-            <div className="loading-text">Analyzing policy, please wait… 🙏</div>
-          </div>
-        )}
-
-        {error && !loading && (
-          <div className="error-box">⚠️ {error}</div>
-        )}
-
-        {result && !loading && (
-          <OutputCard result={result} policyName={displayPolicy} languageLabel={displayLang} />
-        )}
-      </div>
-
-      <div className="footer">
-        PolicyLens-AI &nbsp;·&nbsp; Powered by Claude AI &nbsp;·&nbsp; Made with ♥ for INDIA 🇮🇳
-      </div>
-    </>
+    e('div', { className: 'footer' },
+      'PolicyLens-AI  ·  Powered by Claude AI  ·  Made with ♥ for INDIA 🇮🇳'
+    )
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));

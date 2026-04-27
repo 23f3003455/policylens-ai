@@ -1,16 +1,21 @@
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from duckduckgo_search import DDGS
 
 
+def _ddg_search(policy):
+    results = DDGS().text(
+        f"{policy} India government policy scheme",
+        max_results=3,
+    )
+    if not results:
+        return None
+    return "\n".join(f"- {r['title']}: {r['body']}" for r in results)
+
+
 def fetch_web_context(policy):
-    """Search DuckDuckGo and return top results as a context string."""
     try:
-        results = DDGS().text(
-            f"{policy} India government bill act scheme",
-            max_results=6,
-        )
-        if not results:
-            return None
-        return "\n".join(f"- {r['title']}: {r['body']}" for r in results)
-    except Exception as e:
-        print(f"Search error: {e}")
+        with ThreadPoolExecutor(max_workers=1) as ex:
+            return ex.submit(_ddg_search, policy).result(timeout=4)
+    except (TimeoutError, Exception) as e:
+        print(f"Search skipped: {e}")
         return None

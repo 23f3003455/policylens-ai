@@ -12,6 +12,8 @@ SYSTEM_PROMPT = (
     'No markdown, no extra text.'
 )
 
+_cache = {}
+
 
 def _build_prompt(policy, user_label, lang_instruction, web_context):
     if web_context:
@@ -49,11 +51,11 @@ RULES:
 
 
 def explain_policy(policy, user_type, language):
-    """
-    Fetch web context, call Claude, and return the parsed result dict.
-    Raises ValueError if the AI response cannot be parsed.
-    Raises Exception on Anthropic API errors.
-    """
+    cache_key = f"{policy.lower().strip()}:{user_type}:{language}"
+    if cache_key in _cache:
+        print(f'[CACHE HIT]: {cache_key}')
+        return _cache[cache_key]
+
     user_label = USER_TYPE_LABELS.get(user_type, 'General Citizen')
     lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS['hinglish'])
 
@@ -61,8 +63,8 @@ def explain_policy(policy, user_type, language):
     prompt = _build_prompt(policy, user_label, lang_instruction, web_context)
 
     response = client.messages.create(
-        model='claude-opus-4-7',
-        max_tokens=1500,
+        model='claude-haiku-4-5-20251001',
+        max_tokens=1200,
         system=SYSTEM_PROMPT,
         messages=[{'role': 'user', 'content': prompt}],
     )
@@ -74,4 +76,5 @@ def explain_policy(policy, user_type, language):
     if parsed is None:
         raise ValueError('Could not parse AI response. Please try again.')
 
+    _cache[cache_key] = parsed
     return parsed
