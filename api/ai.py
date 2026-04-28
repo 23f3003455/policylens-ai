@@ -64,7 +64,7 @@ def explain_policy(policy, user_type, language):
 
     response = client.messages.create(
         model='claude-haiku-4-5-20251001',
-        max_tokens=1200,
+        max_tokens=2048,
         system=SYSTEM_PROMPT,
         messages=[{'role': 'user', 'content': prompt}],
     )
@@ -74,6 +74,7 @@ def explain_policy(policy, user_type, language):
 
     parsed = extract_json(text)
     if parsed is None:
+        print(f'[PARSE FAILED] Raw response was:\n{text}\n')
         raise ValueError('Could not parse AI response. Please try again.')
 
     _cache[cache_key] = parsed
