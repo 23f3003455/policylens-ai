@@ -145,7 +145,7 @@ function App() {
           ),
           e('div', { className: 'form-row' },
             e('div', { className: 'form-group' },
-              e('label', null, 'Your Role'),
+              e('label', null, 'User Type'),
               e('div', { className: 'select-wrapper' },
                 e('select', { value: userType, onChange: ev => setUserType(ev.target.value), disabled: loading },
                   USER_TYPES.map(t => e('option', { key: t.value, value: t.value }, t.label))
